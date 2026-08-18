@@ -47,3 +47,16 @@ def parse_HTTP_message(http_message: bytes):
         header.add(key, value)
 
     return (header, body)
+
+def create_HTTP_message(parsed_msg: tuple[Header, str]):
+    msg = ""
+
+    header, body = parsed_msg
+
+    for h in header.headers:
+        msg += h["name"] + ":" + h["value"] + "\r\n"
+
+    msg += "\r\n" #agrega el "\r\n" extra q separa el header del body
+    msg += body
+
+    return msg.encode("utf-8")
