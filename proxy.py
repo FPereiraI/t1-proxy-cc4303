@@ -4,7 +4,31 @@ import sys
 
 HOST = "127.0.0.1"
 
+# inicialmente lo hice con un diccionario simple pero después vi que en un header se puede repetir la misma clave con varios valores (Set-Cookie)
+# con diccionario simple esa informacion se sobreeescribe y se pierde
+# esto es una lista con diccionarios, un diccionario por linea del header, de la forma {"name": name, "value": value}
+class Header:
+    def __init__(self):
+        self.headers = []
+
+    def add(self, name, value):
+        self.headers.append(
+            {
+                "name": name,
+                "value": value
+            }
+        )
+
+# no se considera el caso de nombre repetido con diferentes claves aún
+    def get(self, name):
+        for h in self.headers:
+            if h["name"] == name:
+                return h["value"]
+        return None
+
+
 # toma un mensaje http, lo divide en header y body, pasa el header a un diccionario para facilitar su acceso y retorna el par (header, body)
+# extrae linea por linea el header, el body lo retorna intacto como string
 def parse_HTTP_message(http_message: bytes):
     msg_header, msg_body = http_message.split(b"\r\n\r\n", 1) # divide el mensaje en headers y body separados por \r\n\r\n
 
@@ -14,11 +38,12 @@ def parse_HTTP_message(http_message: bytes):
 
     lines  = msg.split("\r\n")
 
-    header = {} # diccionario con los valores del header, e.g. fields["Host"] == "www.example.com"
-    header["start-line"] = lines[0] # guarda la start line
+    header = Header() # objeto Header con los valores del header, e.g. header.get("Host") retorna "www.example.com"
 
-    for line in lines[1:]: # guarda el resto del header en el diccionario header
+    header.add("start-line", lines[0]) # guarda la start line
+
+    for line in lines[1:]: # guarda el resto del header
         key, value = line.split(":", 1)
-        header[key] = value
+        header.add(key, value)
 
     return (header, body)
