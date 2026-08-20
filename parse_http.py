@@ -2,8 +2,6 @@ import json
 import socket
 import sys
 
-HOST = "127.0.0.1"
-
 # inicialmente lo hice con un diccionario simple pero después vi que en un header se puede repetir la misma clave con varios valores (Set-Cookie)
 # con diccionario simple esa informacion se sobreeescribe y se pierde
 # esto es una lista con diccionarios, un diccionario por linea del header, de la forma {"name": name, "value": value}
