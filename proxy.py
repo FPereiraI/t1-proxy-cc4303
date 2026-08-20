@@ -52,8 +52,9 @@ def create_HTTP_message(parsed_msg: tuple[Header, str]):
     msg = ""
 
     header, body = parsed_msg
+    msg += header.get("start-line") + "\r\n"
 
-    for h in header.headers:
+    for h in header.headers[1:]:
         msg += h["name"] + ":" + h["value"] + "\r\n"
 
     msg += "\r\n" #agrega el "\r\n" extra q separa el header del body
