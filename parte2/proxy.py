@@ -88,6 +88,8 @@ while True:
     else:
         # para no usar conexión keep alive
         header.add("Connection", "close")
+        
+        header.add("X-ElQuePregunta", "Fabián Pereira")
 
         # parte cliente del proxy
         proxy_client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
