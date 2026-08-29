@@ -62,8 +62,8 @@ while True:
         proxy_new_socket.send(response)
 
     # dominio bloqueado
-    elif target_host in blocked:
-        print(f"Dominio bloqueado {target_host}")
+    elif any(b in (target_host + path) for b in blocked):
+        print(f"Dominio bloqueado {target_host}{path}")
         html = (
             "<html><body>"
             "<h1>403 Forbidden</h1>"
