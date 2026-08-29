@@ -22,8 +22,6 @@ if len(sys.argv) > 1:
         for word in data["forbidden_words"]:
             forbidden_words.append(word)
 
-
-
 # Parte server del proxy
 proxy_server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 proxy_server_socket.bind((HOST, 8000))
@@ -88,7 +86,7 @@ while True:
     else:
         # para no usar conexión keep alive
         header.add("Connection", "close")
-        
+
         header.add("X-ElQuePregunta", "Fabián Pereira")
 
         # parte cliente del proxy
@@ -108,6 +106,24 @@ while True:
             response_server += chunk
 
         print("Respuesta del servidor recibida")
+
+        (resp_header, resp_body) = parse_HTTP_message(response_server)
+
+        # reemplazar palabras prohibidas
+        for word_dict in forbidden_words:
+            for word, replacement in word_dict.items():
+                resp_body = resp_body.replace(word, replacement)
+
+        new_length = len(resp_body.encode("utf-8"))
+
+        # actualiza el content length
+        for h in resp_header.headers:
+            if h["name"].strip() == "Content-Length":
+                h["value"] = " " + str(new_length)
+                break
+
+        # se vuelve a armar el mensaje completo con el body ya modificado
+        response_server = create_HTTP_message((resp_header, resp_body))
 
         # envio del mensaje del server al cliente
         print("Reenviando respuesta al cliente")
