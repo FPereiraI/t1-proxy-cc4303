@@ -8,7 +8,8 @@ sys.path.append("../parte1")
 from parse_http import parse_HTTP_message, create_HTTP_message
 
 HOST = "127.0.0.1"
-
+RECV_BUFFER = 50
+    
 # Para abrir JSON
 if len(sys.argv) > 1:
     with open(sys.argv[1]) as file:
@@ -22,6 +23,37 @@ if len(sys.argv) > 1:
         for word in data["forbidden_words"]:
             forbidden_words.append(word)
 
+def recv_headers(scket, buffer_size):
+    data = b""
+    while b"\r\n\r\n" not in data:
+        chunk = scket.recv(buffer_size)
+        if not chunk:
+            break
+        data += chunk
+    return data
+
+def recv_message(scket, buffer_size):
+    data = recv_headers(scket, buffer_size)
+    if b"\r\n\r\n" not in data:
+        return data
+    header_part, _, body_part = data.partition(b"\r\n\r\n")
+
+    content_length = 0
+
+    for line in header_part.split(b"\r\n"):
+        if line.lower().startswith(b"content-length"):
+            content_length = int(line.split(b":", 1)[1].strip())
+            break
+
+    body = body_part
+    while len(body) < content_length:
+        chunk = scket.recv(buffer_size)
+        if not chunk:
+            break
+        body += chunk
+
+    return header_part + b"\r\n\r\n" + body
+
 # Parte server del proxy
 proxy_server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 proxy_server_socket.bind((HOST, 8000))
@@ -32,7 +64,7 @@ while True:
     proxy_new_socket, client_address = proxy_server_socket.accept()
     print(f"Cliente conectado desde {client_address[0]}:{client_address[1]}")
 
-    r_bytes = proxy_new_socket.recv(1024)
+    r_bytes = recv_message(proxy_new_socket, RECV_BUFFER)
     print(f"Request recibido")
 
     (header, body) = parse_HTTP_message(r_bytes)
@@ -98,13 +130,7 @@ while True:
         print("Reenviando request al servidor")
         proxy_client_socket.send(create_HTTP_message((header, body)))
 
-        response_server = b""
-        while True:
-            chunk = proxy_client_socket.recv(1024)
-            if not chunk:
-                break
-            response_server += chunk
-
+        response_server = recv_message(proxy_client_socket, RECV_BUFFER)
         print("Respuesta del servidor recibida")
 
         (resp_header, resp_body) = parse_HTTP_message(response_server)
