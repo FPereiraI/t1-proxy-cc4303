@@ -1,3 +1,22 @@
+"""
+Servidor HTTP mínimo de prueba.
+
+Este script implementa un servidor TCP simple que acepta una única
+conexión entrante, ignora el contenido del request recibido, y
+responde siempre con una misma página HTML de prueba fija, incluyendo
+el header personalizado X-ElQuePregunta.
+
+Uso:
+    python server.py <archivo_config.json>
+
+El archivo de configuración JSON debe contener al menos el campo
+"user", el cual se imprime en consola al iniciar el script.
+
+El servidor escucha en 127.0.0.1:8000, atiende un único cliente, envía
+la respuesta HTTP completa (header + body) y cierra tanto la conexión
+del cliente como el socket servidor.
+"""
+
 import socket
 import sys
 import json
@@ -25,7 +44,7 @@ content_length = len(body_bytes)
 
 header = f"HTTP/1.1 200 OK\r\nContent-Type: text/html; charset=utf-8\r\nX-ElQuePregunta: Fabián\r\nContent-Length: {content_length}\r\nConnection: close\r\n\r\n"
 
-msg = header+body
+msg = header + body
 
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server_socket.bind((HOST, 8000))
